@@ -1,10 +1,13 @@
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { AppController } from './app.controller';
-import { AppService } from './app.service';
-import configuration from './config/configuration';
-import { databaseConfig } from './config/database';
+import configuration from 'src/config/configuration';
+import { databaseConfig } from 'src/config/database';
+import { UsersModule } from 'src/modules/users/users.module';
+import { RolesModule } from 'src/modules/roles/roles.module';
+import { PermissionsModule } from 'src/modules/permissions/permissions.module';
+import { AppController } from 'src/app.controller';
+import { AppService } from 'src/app.service';
 
 @Module({
   controllers: [AppController],
@@ -14,6 +17,9 @@ import { databaseConfig } from './config/database';
       load: [configuration],
     }),
     TypeOrmModule.forRoot(databaseConfig),
+    PermissionsModule,
+    RolesModule,
+    UsersModule,
   ],
   providers: [AppService],
 })

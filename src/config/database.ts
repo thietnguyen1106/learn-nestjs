@@ -1,11 +1,12 @@
 import { TypeOrmModuleOptions } from '@nestjs/typeorm';
-import { CONSTANTS } from './constants';
-import { User } from '../modules/users/entities/user.entity';
+import { CONSTANTS } from 'src/config/constants';
+import { User } from 'src/modules/users/entities/user.entity';
+import { Role } from 'src/modules/roles/entities/role.entity';
+import { Permission } from 'src/modules/permissions/entities/permission.entity';
 
 export const databaseConfig: TypeOrmModuleOptions = {
-  autoLoadEntities: true,
   database: process.env.DATABASE_NAME ?? CONSTANTS.DEFAULT.DATABASE_NAME,
-  entities: [User],
+  entities: [User, Role, Permission],
   host: process.env.DATABASE_HOST ?? CONSTANTS.DEFAULT.DATABASE_HOST,
   migrations: [],
   password:
