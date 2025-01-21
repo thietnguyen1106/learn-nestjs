@@ -23,5 +23,6 @@ module.exports = {
     '@typescript-eslint/no-explicit-any': 'off',
     "sort-keys": ["error", "asc", { caseSensitive: true, natural: false, minKeys: 2 }],
     "sort-keys-fix/sort-keys-fix": ["error", "asc", { caseSensitive: true, natural: false }],
+    "linebreak-style": ["error", "unix"],
   },
 };
