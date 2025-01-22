@@ -1,5 +1,6 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
+import { omit } from 'lodash';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { In, Repository } from 'typeorm';
@@ -35,30 +36,40 @@ export class PermissionsService {
       name,
       roles,
       status,
+      users,
     });
 
-    const savedPermission = await this.permissionRepository.save(permission);
+    await this.permissionRepository.save(permission);
 
-    if (users.length > 0) {
-      for (const user of users) {
-        user.permissions = [...(user.permissions || []), savedPermission];
-        await this.userRepository.save(user);
-      }
-    }
-
-    return await this.findMultiple([savedPermission.id]);
+    return await this.findMultiple([permission.id]);
   }
 
   async findAll() {
-    return await this.permissionRepository.find({
+    const permissions = await this.permissionRepository.find({
       relations: ['roles', 'users'],
+    });
+
+    return permissions.map((permission) => {
+      const { users, ...rest } = permission;
+      return {
+        ...rest,
+        users: users.map((user) => omit(user, ['password', 'salt'])),
+      };
     });
   }
 
   async findMultiple(ids: string[]) {
-    return await this.permissionRepository.find({
+    const permissions = await this.permissionRepository.find({
       relations: ['roles', 'users'],
       where: { id: In(ids) },
+    });
+
+    return permissions.map((permission) => {
+      const { users, ...rest } = permission;
+      return {
+        ...rest,
+        users: users.map((user) => omit(user, ['password', 'salt'])),
+      };
     });
   }
 

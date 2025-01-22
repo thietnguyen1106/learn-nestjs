@@ -79,22 +79,26 @@ export class UsersService {
       status,
     });
 
-    const newUserCreated = await this.userRepository.save(newUser);
+    await this.userRepository.save(newUser);
 
-    return omit(newUserCreated, ['username', 'password', 'salt']);
+    return await this.findMultiple([newUser.id]);
   }
 
   async findAll() {
-    return await this.userRepository.find({
+    const users = await this.userRepository.find({
       relations: ['roles', 'permissions'],
     });
+
+    return users.map((user) => omit(user, ['password', 'salt']));
   }
 
   async findMultiple(ids: string[]) {
-    return await this.userRepository.find({
+    const users = await this.userRepository.find({
       relations: ['roles', 'permissions'],
       where: { id: In(ids) },
     });
+
+    return users.map((user) => omit(user, ['password', 'salt']));
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {

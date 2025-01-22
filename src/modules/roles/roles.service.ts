@@ -1,6 +1,7 @@
 import { Injectable } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
+import { omit } from 'lodash';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { Role } from './entities/role.entity';
@@ -36,19 +37,37 @@ export class RolesService {
       users,
     });
 
-    return await this.roleRepository.save(role);
+    await this.roleRepository.save(role);
+
+    return await this.findMultiple([role.id]);
   }
 
   async findAll() {
-    return await this.roleRepository.find({
+    const roles = await this.roleRepository.find({
       relations: ['users', 'permissions'],
+    });
+
+    return roles.map((role) => {
+      const { users, ...rest } = role;
+      return {
+        ...rest,
+        users: users.map((user) => omit(user, ['password', 'salt'])),
+      };
     });
   }
 
   async findMultiple(ids: string[]) {
-    return await this.roleRepository.find({
+    const roles = await this.roleRepository.find({
       relations: ['users', 'permissions'],
       where: { id: In(ids) },
+    });
+
+    return roles.map((role) => {
+      const { users, ...rest } = role;
+      return {
+        ...rest,
+        users: users.map((user) => omit(user, ['password', 'salt'])),
+      };
     });
   }
 
