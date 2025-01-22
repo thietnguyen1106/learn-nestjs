@@ -1,4 +1,8 @@
-import { ConflictException, Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
@@ -102,7 +106,72 @@ export class UsersService {
   }
 
   async update(id: string, updateUserDto: UpdateUserDto) {
-    return `This action updates a #${id} user`;
+    const {
+      companyId,
+      departmentId,
+      email,
+      firstName,
+      gender,
+      lastName,
+      phone,
+      status,
+      roleIds,
+      roleDeleteIds,
+      permissionIds,
+      permissionDeleteIds,
+    } = updateUserDto;
+
+    const currentUser = (await this.findMultiple([id]))[0];
+    if (!currentUser) {
+      throw new NotFoundException(`User with id '${id}' not found`);
+    }
+
+    if (email && email !== currentUser.email) {
+      const checkEmail = await this.userRepository.find({
+        where: {
+          email,
+          status: Not(EntityStatus.DELETE),
+        },
+      });
+      if (checkEmail.length > 0) {
+        throw new ConflictException(`Email '${email}' already exist`);
+      }
+    }
+
+    const [roles, permissions] = await Promise.all([
+      this.roleRepository.findBy({ id: In(roleIds) }),
+      this.permissionRepository.findBy({ id: In(permissionIds) }),
+    ]);
+
+    const newUserRoles = currentUser.roles
+      .filter((role) => !roleDeleteIds.includes(role.id))
+      .concat(roles);
+    const newUserPermissions = currentUser.permissions
+      .filter((permission) => !permissionDeleteIds.includes(permission.id))
+      .concat(permissions);
+
+    const creationUserId = 'user.id';
+    const lastModifiedUserId = 'user.id';
+
+    const updatedUser = {
+      ...currentUser,
+      company: companyId,
+      creationUserId,
+      department: departmentId,
+      email,
+      firstName,
+      gender,
+      lastModifiedUserId,
+      lastName,
+      permissions: newUserPermissions,
+      phone,
+      roles: newUserRoles,
+      status,
+    };
+
+    await this.userRepository.save(updatedUser);
+
+    return await this.findMultiple([updatedUser.id]);
   }
 
   async remove(id: string) {

@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { omit } from 'lodash';
@@ -72,7 +72,46 @@ export class RolesService {
   }
 
   async update(id: string, updateRoleDto: UpdateRoleDto) {
-    return `This action updates a #${id} role`;
+    const {
+      name,
+      description,
+      status,
+      userIds,
+      userDeleteIds,
+      permissionIds,
+      permissionDeleteIds,
+    } = updateRoleDto;
+
+    const currentRole = (await this.findMultiple([id]))[0];
+
+    if (!currentRole) {
+      throw new NotFoundException(`Role with id ${id} not found`);
+    }
+
+    const [users, permissions] = await Promise.all([
+      this.userRepository.findBy({ id: In(userIds) }),
+      this.permissionRepository.findBy({ id: In(permissionIds) }),
+    ]);
+
+    const newUsers = currentRole.users
+      .filter((user) => !userDeleteIds.includes(user.id))
+      .concat(users);
+    const newPermissions = currentRole.permissions
+      .filter((permission) => !permissionDeleteIds.includes(permission.id))
+      .concat(permissions);
+
+    const roleUpdated = {
+      ...currentRole,
+      description,
+      name,
+      permissions: newPermissions,
+      status,
+      users: newUsers,
+    };
+
+    await this.roleRepository.save(roleUpdated);
+
+    return await this.findMultiple([roleUpdated.id]);
   }
 
   async remove(id: string) {

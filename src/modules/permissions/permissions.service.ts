@@ -1,4 +1,8 @@
-import { Injectable } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { omit } from 'lodash';
 import { CreatePermissionDto } from './dto/create-permission.dto';
@@ -74,7 +78,57 @@ export class PermissionsService {
   }
 
   async update(id: string, updatePermissionDto: UpdatePermissionDto) {
-    return `This action updates a #${id} permission`;
+    const {
+      name,
+      code,
+      description,
+      status,
+      userIds,
+      userDeleteIds,
+      roleIds,
+      roleDeleteIds,
+    } = updatePermissionDto;
+
+    const checkPermissionCode = await this.permissionRepository.findOne({
+      where: { code },
+    });
+    if (checkPermissionCode) {
+      throw new ConflictException(
+        `Permission with code ${code} already exists`,
+      );
+    }
+
+    const currentPermission = (await this.findMultiple([id]))[0];
+
+    if (!currentPermission) {
+      throw new NotFoundException(`Permission with id ${id} not found`);
+    }
+
+    const [users, roles] = await Promise.all([
+      this.userRepository.findBy({ id: In(userIds) }),
+      this.roleRepository.findBy({ id: In(roleIds) }),
+    ]);
+
+    const newUsers = currentPermission.users
+      .filter((user) => !userDeleteIds.includes(user.id))
+      .concat(users);
+    const newRoles = currentPermission.roles
+      .filter((role) => !roleDeleteIds.includes(role.id))
+      .concat(roles);
+
+    const permissionUpdated = {
+      ...currentPermission,
+      code,
+      description,
+      name,
+      roles: newRoles,
+      status,
+      users: newUsers,
+    };
+
+    await this.permissionRepository.save(permissionUpdated);
+
+    return await this.findMultiple([permissionUpdated.id]);
   }
 
   async remove(id: string) {
