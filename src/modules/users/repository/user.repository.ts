@@ -1,7 +1,7 @@
 import { AppDataSource } from 'src/config/data-source';
 import { SignInDto } from 'src/modules/auth/dto/sign-in.dto';
-import { User } from '../entities/user.entity';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
+import { User } from '../entities/user.entity';
 
 export const UserRepository = AppDataSource.getRepository(User).extend({
   async validateUser(signInDto: SignInDto): Promise<User | null> {

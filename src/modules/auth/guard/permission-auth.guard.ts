@@ -10,7 +10,11 @@ import { intersection } from 'lodash';
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
 import { UsersService } from 'src/modules/users/users.service';
 import { RolesService } from 'src/modules/roles/roles.service';
-import { PERMISSION_AUTH } from 'src/config/permission';
+import {
+  COMPARE_TYPES,
+  META_DATA_KEY,
+  PERMISSION_AUTH,
+} from 'src/config/permission';
 
 @Injectable()
 export class PermissionAuthGuard implements CanActivate {
@@ -24,7 +28,7 @@ export class PermissionAuthGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const permissions = this.reflector.getAllAndOverride<string[]>(
-      'permissions',
+      META_DATA_KEY,
       [context.getHandler(), context.getClass()],
     );
 
@@ -67,6 +71,12 @@ export class PermissionAuthGuard implements CanActivate {
       if (userPermissionCodes.indexOf(permissionsList[i].code) < 0) {
         userPermissionCodes.push(permissionsList[i].code);
       }
+    }
+
+    if (permissions[0] === COMPARE_TYPES.OR) {
+      return userPermissionCodes.some((element) =>
+        permissions.filter((_item, i) => i > 0).includes(element),
+      );
     }
 
     if (

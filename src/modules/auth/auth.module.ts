@@ -1,21 +1,21 @@
 import { Module } from '@nestjs/common';
-import { AuthService } from './auth.service';
-import { AuthController } from './auth.controller';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtStrategy } from './strategy/jwt.strategy';
+import { JwtAuthStrategy } from './strategy/jwt-auth.strategy';
 import { JwtForgotPasswordStrategy } from './strategy/jwt-forgot-password.strategy';
 import { User } from '../users/entities/user.entity';
-import { ConfigModule, ConfigService } from '@nestjs/config';
 import { UsersModule } from '../users/users.module';
 import { RolesModule } from '../roles/roles.module';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { AuthService } from './auth.service';
+import { AuthController } from './auth.controller';
 
 @Module({
   controllers: [AuthController],
   exports: [
-    //JwtStrategy, //* only using when only have 1 auth guard method
+    //JwtAuthStrategy, //* only using when only have 1 auth guard method
     PassportModule,
   ],
   imports: [
@@ -37,6 +37,6 @@ import { PermissionsModule } from '../permissions/permissions.module';
     RolesModule,
     PermissionsModule,
   ],
-  providers: [AuthService, JwtStrategy, JwtForgotPasswordStrategy],
+  providers: [AuthService, JwtAuthStrategy, JwtForgotPasswordStrategy],
 })
 export class AuthModule {}

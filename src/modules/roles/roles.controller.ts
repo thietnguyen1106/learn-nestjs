@@ -9,11 +9,11 @@ import {
   UseGuards,
   ValidationPipe,
 } from '@nestjs/common';
+import { PERMISSION_AUTH } from 'src/config/permission';
 import { RolesService } from './roles.service';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { Permissions } from '../auth/decorator/permission.decorator';
-import { PERMISSION_AUTH } from 'src/config/permission';
 import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
 import { PermissionAuthGuard } from '../auth/guard/permission-auth.guard';
 import { GetUser } from '../users/decorator/get-user.decorator';

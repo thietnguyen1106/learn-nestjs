@@ -1,3 +1,10 @@
+const COMPARE_TYPES = {
+  AND: 'and',
+  OR: 'or',
+};
+
+const META_DATA_KEY = 'permissions';
+
 const PERMISSION_AUTH = {
   ALL: 'ALL',
   PERMISSION: {
@@ -29,4 +36,4 @@ const PERMISSION_AUTH = {
   },
 };
 
-export { PERMISSION_AUTH };
+export { COMPARE_TYPES, META_DATA_KEY, PERMISSION_AUTH };

@@ -1,4 +1,4 @@
-export interface JwtPayLoad {
+export interface JwtAuthPayLoad {
   id: string;
   fullName: string;
 }

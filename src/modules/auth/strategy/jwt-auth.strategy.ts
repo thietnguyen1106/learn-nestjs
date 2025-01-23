@@ -4,13 +4,13 @@ import { Omit, omit } from 'lodash';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { User } from 'src/modules/users/entities/user.entity';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
-import { JwtPayLoad } from '../interface/jwt-payload.interface';
+import { JwtAuthPayLoad } from '../interface/jwt-auth-payload.interface';
 import { UserRepository } from '../../users/repository/user.repository';
 
 @Injectable()
-export class JwtStrategy extends PassportStrategy(
+export class JwtAuthStrategy extends PassportStrategy(
   Strategy,
-  'jwt-auth-strategy',
+  process.env.JWT_AUTH_STRATEGY_NAME,
 ) {
   constructor() {
     super({
@@ -23,7 +23,7 @@ export class JwtStrategy extends PassportStrategy(
   }
 
   async validate(
-    payload: JwtPayLoad,
+    payload: JwtAuthPayLoad,
   ): Promise<Omit<User, 'password' | 'salt'>> {
     const { id } = payload;
 

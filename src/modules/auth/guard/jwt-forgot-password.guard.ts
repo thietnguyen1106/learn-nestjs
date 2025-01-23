@@ -3,5 +3,5 @@ import { Injectable } from '@nestjs/common';
 
 @Injectable()
 export class JwtForgotPasswordGuard extends AuthGuard(
-  'jwt-forgot-password-strategy',
+  process.env.JWT_FORGOT_PASSWORD_STRATEGY_NAME,
 ) {}
