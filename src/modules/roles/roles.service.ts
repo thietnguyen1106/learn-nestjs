@@ -2,6 +2,8 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { omit } from 'lodash';
+import { EntityStatus } from 'src/common/enum/entity-status.enum';
+import { getStatusCondition } from 'src/utils/getStatusCondition';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { Role } from './entities/role.entity';
@@ -19,18 +21,24 @@ export class RolesService {
     private readonly permissionRepository: Repository<Permission>,
   ) {}
 
-  async create(createRoleDto: CreateRoleDto) {
-    const { name, description, status, userIds, permissionIds } = createRoleDto;
+  async create(createRoleDto: CreateRoleDto, user: User) {
+    const {
+      name,
+      description,
+      status,
+      userIds = [],
+      permissionIds = [],
+    } = createRoleDto;
 
-    const users = userIds
-      ? await this.userRepository.findBy({ id: In(userIds) })
-      : [];
-    const permissions = permissionIds
-      ? await this.permissionRepository.findBy({ id: In(permissionIds) })
-      : [];
+    const [users, permissions] = await Promise.all([
+      this.userRepository.findBy({ id: In(userIds) }),
+      this.permissionRepository.findBy({ id: In(permissionIds) }),
+    ]);
 
     const role = this.roleRepository.create({
+      creationUserId: user.id,
       description,
+      lastModifiedUserId: user.id,
       name,
       permissions,
       status,
@@ -39,12 +47,15 @@ export class RolesService {
 
     await this.roleRepository.save(role);
 
-    return await this.findMultiple([role.id]);
+    return this.findMultiple([role.id], user);
   }
 
-  async findAll() {
+  async findAll(user: User) {
     const roles = await this.roleRepository.find({
       relations: ['users', 'permissions'],
+      where: {
+        ...getStatusCondition(user),
+      },
     });
 
     return roles.map((role) => {
@@ -56,10 +67,13 @@ export class RolesService {
     });
   }
 
-  async findMultiple(ids: string[]) {
+  async findMultiple(ids: string[], user: User) {
     const roles = await this.roleRepository.find({
       relations: ['users', 'permissions'],
-      where: { id: In(ids) },
+      where: {
+        id: In(ids),
+        ...getStatusCondition(user),
+      },
     });
 
     return roles.map((role) => {
@@ -71,18 +85,18 @@ export class RolesService {
     });
   }
 
-  async update(id: string, updateRoleDto: UpdateRoleDto) {
+  async update(id: string, updateRoleDto: UpdateRoleDto, user: User) {
     const {
       name,
       description,
       status,
-      userIds,
-      userDeleteIds,
-      permissionIds,
-      permissionDeleteIds,
+      userIds = [],
+      userDeleteIds = [],
+      permissionIds = [],
+      permissionDeleteIds = [],
     } = updateRoleDto;
 
-    const currentRole = (await this.findMultiple([id]))[0];
+    const currentRole = (await this.findMultiple([id], user))[0];
 
     if (!currentRole) {
       throw new NotFoundException(`Role with id ${id} not found`);
@@ -103,6 +117,7 @@ export class RolesService {
     const roleUpdated = {
       ...currentRole,
       description,
+      lastModifiedUserId: user.id,
       name,
       permissions: newPermissions,
       status,
@@ -111,10 +126,10 @@ export class RolesService {
 
     await this.roleRepository.save(roleUpdated);
 
-    return await this.findMultiple([roleUpdated.id]);
+    return this.findMultiple([roleUpdated.id], user);
   }
 
-  async remove(id: string) {
-    return `This action removes a #${id} role`;
+  async remove(id: string, user: User) {
+    return this.update(id, { status: EntityStatus.DELETE }, user);
   }
 }

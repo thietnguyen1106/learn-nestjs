@@ -7,12 +7,13 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { omit } from 'lodash';
+import { EntityStatus } from 'src/common/enum/entity-status.enum';
+import { getStatusCondition } from 'src/utils/getStatusCondition';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
 import { Role } from '../roles/entities/role.entity';
 import { Permission } from '../permissions/entities/permission.entity';
-import { EntityStatus } from 'src/common/enum/entity-status.enum';
 
 @Injectable()
 export class UsersService {
@@ -25,11 +26,7 @@ export class UsersService {
     private readonly permissionRepository: Repository<Permission>,
   ) {}
 
-  async hashPassword(password: string, salt: string): Promise<string> {
-    return bcrypt.hash(password, salt);
-  }
-
-  async create(createUserDto: CreateUserDto) {
+  async create(createUserDto: CreateUserDto, user: User) {
     const {
       companyId,
       departmentId,
@@ -40,8 +37,8 @@ export class UsersService {
       password,
       phone,
       status,
-      roleIds,
-      permissionIds,
+      roleIds = [],
+      permissionIds = [],
     } = createUserDto;
 
     const checkEmail = await this.userRepository.find({
@@ -54,26 +51,22 @@ export class UsersService {
       throw new ConflictException(`Email '${email}' already exist`);
     }
 
-    const roles = roleIds
-      ? await this.roleRepository.findBy({ id: In(roleIds) })
-      : [];
-    const permissions = permissionIds
-      ? await this.permissionRepository.findBy({ id: In(permissionIds) })
-      : [];
+    const [roles, permissions, salt] = await Promise.all([
+      this.roleRepository.findBy({ id: In(roleIds) }),
+      this.permissionRepository.findBy({ id: In(permissionIds) }),
+      bcrypt.genSalt(),
+    ]);
 
-    const creationUserId = 'user.id';
-    const lastModifiedUserId = 'user.id';
-    const salt = await bcrypt.genSalt();
-    const hashPassword = await this.hashPassword(password, salt);
+    const hashPassword = await bcrypt.hash(password, salt);
 
     const newUser = this.userRepository.create({
       company: companyId,
-      creationUserId,
+      creationUserId: user.id,
       department: departmentId,
       email,
       firstName,
       gender,
-      lastModifiedUserId,
+      lastModifiedUserId: user.id,
       lastName,
       password: hashPassword,
       permissions,
@@ -85,27 +78,33 @@ export class UsersService {
 
     await this.userRepository.save(newUser);
 
-    return await this.findMultiple([newUser.id]);
+    return this.findMultiple([newUser.id], user);
   }
 
-  async findAll() {
+  async findAll(user: User) {
     const users = await this.userRepository.find({
       relations: ['roles', 'permissions'],
+      where: {
+        ...getStatusCondition(user),
+      },
     });
 
     return users.map((user) => omit(user, ['password', 'salt']));
   }
 
-  async findMultiple(ids: string[]) {
+  async findMultiple(ids: string[], user: User) {
     const users = await this.userRepository.find({
       relations: ['roles', 'permissions'],
-      where: { id: In(ids) },
+      where: {
+        id: In(ids),
+        ...getStatusCondition(user),
+      },
     });
 
     return users.map((user) => omit(user, ['password', 'salt']));
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto) {
+  async update(id: string, updateUserDto: UpdateUserDto, user: User) {
     const {
       companyId,
       departmentId,
@@ -115,13 +114,13 @@ export class UsersService {
       lastName,
       phone,
       status,
-      roleIds,
-      roleDeleteIds,
-      permissionIds,
-      permissionDeleteIds,
+      roleIds = [],
+      roleDeleteIds = [],
+      permissionIds = [],
+      permissionDeleteIds = [],
     } = updateUserDto;
 
-    const currentUser = (await this.findMultiple([id]))[0];
+    const currentUser = (await this.findMultiple([id], user))[0];
     if (!currentUser) {
       throw new NotFoundException(`User with id '${id}' not found`);
     }
@@ -130,7 +129,7 @@ export class UsersService {
       const checkEmail = await this.userRepository.find({
         where: {
           email,
-          status: Not(EntityStatus.DELETE),
+          ...getStatusCondition(user),
         },
       });
       if (checkEmail.length > 0) {
@@ -150,18 +149,15 @@ export class UsersService {
       .filter((permission) => !permissionDeleteIds.includes(permission.id))
       .concat(permissions);
 
-    const creationUserId = 'user.id';
-    const lastModifiedUserId = 'user.id';
-
     const updatedUser = {
       ...currentUser,
       company: companyId,
-      creationUserId,
+      creationUserId: user.id,
       department: departmentId,
       email,
       firstName,
       gender,
-      lastModifiedUserId,
+      lastModifiedUserId: user.id,
       lastName,
       permissions: newUserPermissions,
       phone,
@@ -171,10 +167,10 @@ export class UsersService {
 
     await this.userRepository.save(updatedUser);
 
-    return await this.findMultiple([updatedUser.id]);
+    return this.findMultiple([updatedUser.id], user);
   }
 
-  async remove(id: string) {
-    return `This action removes a #${id} user`;
+  async remove(id: string, user: User) {
+    return this.update(id, { status: EntityStatus.DELETE }, user);
   }
 }

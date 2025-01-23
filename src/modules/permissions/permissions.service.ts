@@ -5,6 +5,8 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { omit } from 'lodash';
+import { EntityStatus } from 'src/common/enum/entity-status.enum';
+import { getStatusCondition } from 'src/utils/getStatusCondition';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { In, Repository } from 'typeorm';
@@ -23,20 +25,26 @@ export class PermissionsService {
     private readonly permissionRepository: Repository<Permission>,
   ) {}
 
-  async create(createPermissionDto: CreatePermissionDto) {
-    const { name, code, description, status, userIds, roleIds } =
-      createPermissionDto;
+  async create(createPermissionDto: CreatePermissionDto, user: User) {
+    const {
+      name,
+      code,
+      description,
+      status,
+      userIds = [],
+      roleIds = [],
+    } = createPermissionDto;
 
-    const roles = roleIds
-      ? await this.roleRepository.findBy({ id: In(roleIds) })
-      : [];
-    const users = userIds
-      ? await this.userRepository.findBy({ id: In(userIds) })
-      : [];
+    const [users, roles] = await Promise.all([
+      this.userRepository.findBy({ id: In(userIds) }),
+      this.roleRepository.findBy({ id: In(roleIds) }),
+    ]);
 
     const permission = this.permissionRepository.create({
       code,
+      creationUserId: user.id,
       description,
+      lastModifiedUserId: user.id,
       name,
       roles,
       status,
@@ -45,12 +53,15 @@ export class PermissionsService {
 
     await this.permissionRepository.save(permission);
 
-    return await this.findMultiple([permission.id]);
+    return this.findMultiple([permission.id], user);
   }
 
-  async findAll() {
+  async findAll(user: User) {
     const permissions = await this.permissionRepository.find({
       relations: ['roles', 'users'],
+      where: {
+        ...getStatusCondition(user),
+      },
     });
 
     return permissions.map((permission) => {
@@ -62,10 +73,10 @@ export class PermissionsService {
     });
   }
 
-  async findMultiple(ids: string[]) {
+  async findMultiple(ids: string[], user: User) {
     const permissions = await this.permissionRepository.find({
       relations: ['roles', 'users'],
-      where: { id: In(ids) },
+      where: { id: In(ids), ...getStatusCondition(user) },
     });
 
     return permissions.map((permission) => {
@@ -77,28 +88,34 @@ export class PermissionsService {
     });
   }
 
-  async update(id: string, updatePermissionDto: UpdatePermissionDto) {
+  async update(
+    id: string,
+    updatePermissionDto: UpdatePermissionDto,
+    user: User,
+  ) {
     const {
       name,
       code,
       description,
       status,
-      userIds,
-      userDeleteIds,
-      roleIds,
-      roleDeleteIds,
+      userIds = [],
+      userDeleteIds = [],
+      roleIds = [],
+      roleDeleteIds = [],
     } = updatePermissionDto;
 
-    const checkPermissionCode = await this.permissionRepository.findOne({
-      where: { code },
-    });
-    if (checkPermissionCode) {
-      throw new ConflictException(
-        `Permission with code ${code} already exists`,
-      );
+    if (code) {
+      const checkPermissionCode = await this.permissionRepository.findOne({
+        where: { code },
+      });
+      if (checkPermissionCode) {
+        throw new ConflictException(
+          `Permission with code ${code} already exists`,
+        );
+      }
     }
 
-    const currentPermission = (await this.findMultiple([id]))[0];
+    const currentPermission = (await this.findMultiple([id], user))[0];
 
     if (!currentPermission) {
       throw new NotFoundException(`Permission with id ${id} not found`);
@@ -120,6 +137,7 @@ export class PermissionsService {
       ...currentPermission,
       code,
       description,
+      lastModifiedUserId: user.id,
       name,
       roles: newRoles,
       status,
@@ -128,10 +146,10 @@ export class PermissionsService {
 
     await this.permissionRepository.save(permissionUpdated);
 
-    return await this.findMultiple([permissionUpdated.id]);
+    return this.findMultiple([permissionUpdated.id], user);
   }
 
-  async remove(id: string) {
-    return `This action removes a #${id} permission`;
+  async remove(id: string, user: User) {
+    return this.update(id, { status: EntityStatus.DELETE }, user);
   }
 }

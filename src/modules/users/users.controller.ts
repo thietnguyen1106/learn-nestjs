@@ -6,43 +6,58 @@ import {
   Patch,
   Param,
   Delete,
-  // UseGuards,
+  UseGuards,
+  ValidationPipe,
 } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
-// import { User } from './entities/user.entity';
-// import { GetUser } from './decorator/get-user.decorator';
-// import { PermissionAuthGuard } from './../auth/guard/permission-auth.guard';
-// import { JwtAuthGuard } from './../auth/guard/jwt-auth.guard';
+import { JwtAuthGuard } from '../auth/guard/jwt-auth.guard';
+import { PermissionAuthGuard } from '../auth/guard/permission-auth.guard';
+import { Permissions } from '../auth/decorator/permission.decorator';
+import { PERMISSION_AUTH } from 'src/config/permission';
+import { GetUser } from './decorator/get-user.decorator';
+import { User } from './entities/user.entity';
 
-// @UseGuards(JwtAuthGuard, PermissionAuthGuard)
+@UseGuards(JwtAuthGuard, PermissionAuthGuard)
 @Controller('users')
 export class UsersController {
   constructor(private readonly usersService: UsersService) {}
 
   @Post()
-  create(@Body() createUserDto: CreateUserDto) {
-    return this.usersService.create(createUserDto);
+  @Permissions(PERMISSION_AUTH.USER.CREATE)
+  create(
+    @Body(ValidationPipe) createUserDto: CreateUserDto,
+    @GetUser() user: User,
+  ) {
+    return this.usersService.create(createUserDto, user);
   }
 
   @Get()
-  findAll() {
-    return this.usersService.findAll();
+  @Permissions(PERMISSION_AUTH.USER.VIEW.ALL)
+  findAll(@GetUser() user: User) {
+    return this.usersService.findAll(user);
   }
 
   @Get(':ids')
-  findMultiple(@Param('ids') ids: string[]) {
-    return this.usersService.findMultiple(ids);
+  @Permissions(PERMISSION_AUTH.USER.VIEW.MULTIPLE)
+  findMultiple(@Param('ids') ids: string[], @GetUser() user: User) {
+    return this.usersService.findMultiple(ids, user);
   }
 
   @Patch(':id')
-  update(@Param('id') id: string, @Body() updateUserDto: UpdateUserDto) {
-    return this.usersService.update(id, updateUserDto);
+  @Permissions(PERMISSION_AUTH.USER.UPDATE)
+  update(
+    @Param('id') id: string,
+    @Body(ValidationPipe) updateUserDto: UpdateUserDto,
+    @GetUser() user: User,
+  ) {
+    return this.usersService.update(id, updateUserDto, user);
   }
 
   @Delete(':id')
-  remove(@Param('id') id: string) {
-    return this.usersService.remove(id);
+  @Permissions(PERMISSION_AUTH.ALL)
+  remove(@Param('id') id: string, @GetUser() user: User) {
+    return this.usersService.remove(id, user);
   }
 }

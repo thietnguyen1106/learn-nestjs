@@ -7,12 +7,18 @@ import {
 import { Observable } from 'rxjs';
 import { Reflector } from '@nestjs/core';
 import { intersection } from 'lodash';
-import { Role } from 'src/modules/roles/entities/role.entity';
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
+import { UsersService } from 'src/modules/users/users.service';
+import { RolesService } from 'src/modules/roles/roles.service';
+import { PERMISSION_AUTH } from 'src/config/permission';
 
 @Injectable()
 export class PermissionAuthGuard implements CanActivate {
-  constructor(private readonly reflector: Reflector) {}
+  constructor(
+    private readonly reflector: Reflector,
+    private readonly usersService: UsersService,
+    private readonly rolesService: RolesService,
+  ) {}
 
   canActivate(
     context: ExecutionContext,
@@ -35,23 +41,26 @@ export class PermissionAuthGuard implements CanActivate {
     request: any,
     permissions: string[],
   ): Promise<boolean> {
-    const user = request.user;
-    const permissionsList: Permission[] = [];
+    const requestUser = request.user;
 
-    const userRoles = await this.getUserRoles(user.id);
+    const user = (
+      await this.usersService.findMultiple([requestUser.id], requestUser)
+    )[0];
 
-    const promiseRolePermissions = userRoles.map((role) => {
-      if (role) {
-        return this.getRolePermissions(role.id);
-      }
-    });
-    const rolePermissions = (await Promise.all(promiseRolePermissions)).flatMap(
-      (rolePermission) => rolePermission,
+    if (!user) {
+      throw new ForbiddenException(`User not found`);
+    }
+
+    const rolePermissions = await this.rolesService.findMultiple(
+      user.roles.map((role) => role.id),
+      requestUser,
     );
-    permissionsList.push(...rolePermissions);
-
-    const userPermission = await this.getUserPermissions(user.id);
-    permissionsList.push(...userPermission);
+    const permissionsList: Permission[] = [
+      ...rolePermissions
+        .map((rolePermission) => rolePermission.permissions)
+        .flatMap((permission) => permission),
+      ...user.permissions,
+    ];
 
     const userPermissionCodes: string[] = [];
     for (let i = 0; i < permissionsList.length; i++) {
@@ -65,7 +74,8 @@ export class PermissionAuthGuard implements CanActivate {
         .sort()
         .toString()
         .replace(/[,]+/g, '') ===
-      permissions.sort().toString().replace(/[,]+/g, '')
+        permissions.sort().toString().replace(/[,]+/g, '') ||
+      userPermissionCodes.includes(PERMISSION_AUTH.ALL)
     ) {
       return true;
     } else {
@@ -73,17 +83,5 @@ export class PermissionAuthGuard implements CanActivate {
         `Sorry you are restricted from this function`,
       );
     }
-  }
-
-  private async getUserRoles(userId: string): Promise<Role[]> {
-    return [];
-  }
-
-  private async getRolePermissions(roleId: string): Promise<Permission[]> {
-    return [];
-  }
-
-  private async getUserPermissions(userId: string): Promise<Permission[]> {
-    return [];
   }
 }

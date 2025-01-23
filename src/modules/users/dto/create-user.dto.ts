@@ -22,7 +22,7 @@ export class CreateUserDto {
   @IsString()
   firstName: string;
 
-  gender: Gender;
+  gender?: Gender;
 
   @IsString()
   lastName: string;
@@ -39,7 +39,7 @@ export class CreateUserDto {
 
   status: EntityStatus;
 
-  roleIds: string[];
+  roleIds?: string[];
 
-  permissionIds: string[];
+  permissionIds?: string[];
 }
