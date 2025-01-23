@@ -3,23 +3,21 @@ import { ConfigModule, ConfigService } from '@nestjs/config';
 import { PassportModule } from '@nestjs/passport';
 import { JwtModule } from '@nestjs/jwt';
 import { TypeOrmModule } from '@nestjs/typeorm';
-import { JwtAuthStrategy } from './strategy/jwt-auth.strategy';
-import { JwtForgotPasswordStrategy } from './strategy/jwt-forgot-password.strategy';
 import { User } from '../users/entities/user.entity';
 import { UsersModule } from '../users/users.module';
 import { RolesModule } from '../roles/roles.module';
 import { PermissionsModule } from '../permissions/permissions.module';
-import { AuthService } from './auth.service';
+import { JwtAuthStrategy } from './strategy/jwt-auth.strategy';
+import { JwtForgotPasswordStrategy } from './strategy/jwt-forgot-password.strategy';
 import { AuthController } from './auth.controller';
+import { AuthService } from './auth.service';
 
 @Module({
   controllers: [AuthController],
-  exports: [
-    //JwtAuthStrategy, //* only using when only have 1 auth guard method
-    PassportModule,
-  ],
+  exports: [PassportModule],
   imports: [
-    PassportModule, //*.register({ defaultStrategy: 'jwt' }), //* only using when only have 1 auth guard method
+    // PassportModule.register({ defaultStrategy: process.env.JWT_AUTH_STRATEGY_NAME }), //* only using when only have 1 auth guard method
+    PassportModule,
     JwtModule.registerAsync({
       imports: [ConfigModule],
       inject: [ConfigService],

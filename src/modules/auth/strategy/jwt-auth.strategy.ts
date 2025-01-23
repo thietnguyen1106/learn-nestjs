@@ -7,16 +7,21 @@ import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { JwtAuthPayLoad } from '../interface/jwt-auth-payload.interface';
 import { UserRepository } from '../../users/repository/user.repository';
 
+export const JWT_AUTH_STRATEGY_NAME = 'jwt-auth-strategy';
+
 @Injectable()
 export class JwtAuthStrategy extends PassportStrategy(
   Strategy,
-  process.env.JWT_AUTH_STRATEGY_NAME,
+  JWT_AUTH_STRATEGY_NAME,
 ) {
   constructor() {
     super({
-      // jwtFromRequest: ExtractJwt.fromExtractors([(request: Request) => {
-      //   return request?.cookies?.Authentication;
-      // }]),
+      // // Custom source to get token value
+      // jwtFromRequest: ExtractJwt.fromExtractors([
+      //   (request: Request) => {
+      //     return request?.cookies?.Authentication;
+      //   },
+      // ]),
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: process.env.JWT_SECRET,
     });

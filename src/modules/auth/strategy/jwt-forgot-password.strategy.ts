@@ -7,10 +7,12 @@ import { User } from 'src/modules/users/entities/user.entity';
 import { UserRepository } from '../../users/repository/user.repository';
 import { JwtForgotPasswordPayLoad } from '../interface/jwt-forgot-password-payload.interface';
 
+export const JWT_FORGOT_PASSWORD_STRATEGY_NAME = 'jwt-forgot-password-strategy';
+
 @Injectable()
 export class JwtForgotPasswordStrategy extends PassportStrategy(
   Strategy,
-  process.env.JWT_FORGOT_PASSWORD_STRATEGY_NAME,
+  JWT_FORGOT_PASSWORD_STRATEGY_NAME,
 ) {
   constructor() {
     super({
