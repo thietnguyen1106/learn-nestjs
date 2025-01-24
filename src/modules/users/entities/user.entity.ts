@@ -7,7 +7,7 @@ import {
   JoinTable,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { v4 as uuidv4 } from 'uuid';
+import { UUIDTypes, v4 as uuidv4 } from 'uuid';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { Gender } from 'src/common/enum/gender.enum';
 import { Role } from 'src/modules/roles/entities/role.entity';
@@ -21,8 +21,8 @@ export class User {
   @Column({ default: () => 'CURRENT_TIMESTAMP', type: 'timestamp' })
   createdAt: Date;
 
-  @Column()
-  creationUserId: string;
+  @Column({ type: 'uuid' })
+  creationUserId: UUIDTypes;
 
   @Column({ nullable: true })
   department: string;
@@ -37,10 +37,10 @@ export class User {
   gender: Gender;
 
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: UUIDTypes;
 
-  @Column()
-  lastModifiedUserId: string;
+  @Column({ type: 'uuid' })
+  lastModifiedUserId: UUIDTypes;
 
   @Column()
   lastName: string;

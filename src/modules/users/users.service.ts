@@ -7,6 +7,7 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { In, Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { omit } from 'lodash';
+import { UUIDTypes } from 'uuid';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { getStatusCondition } from 'src/utils/getStatusCondition';
 import { CreateUserDto } from './dto/create-user.dto';
@@ -92,7 +93,7 @@ export class UsersService {
     return users.map((user) => omit(user, ['password', 'salt']));
   }
 
-  async findMultiple(ids: string[], user: User) {
+  async findMultiple(ids: UUIDTypes[], user: User) {
     const users = await this.userRepository.find({
       relations: ['roles', 'permissions'],
       where: {
@@ -104,7 +105,7 @@ export class UsersService {
     return users.map((user) => omit(user, ['password', 'salt']));
   }
 
-  async update(id: string, updateUserDto: UpdateUserDto, user: User) {
+  async update(id: UUIDTypes, updateUserDto: UpdateUserDto, user: User) {
     const {
       companyId,
       departmentId,
@@ -170,7 +171,7 @@ export class UsersService {
     return this.findMultiple([updatedUser.id], user);
   }
 
-  async remove(id: string, user: User) {
+  async remove(id: UUIDTypes, user: User) {
     return this.update(id, { status: EntityStatus.DELETE }, user);
   }
 }

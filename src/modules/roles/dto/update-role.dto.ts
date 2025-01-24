@@ -1,7 +1,8 @@
+import { UUIDTypes } from 'uuid';
 import { PartialType } from '@nestjs/mapped-types';
 import { CreateRoleDto } from './create-role.dto';
 
 export class UpdateRoleDto extends PartialType(CreateRoleDto) {
-  userDeleteIds?: string[];
-  permissionDeleteIds?: string[];
+  userDeleteIds?: UUIDTypes[];
+  permissionDeleteIds?: UUIDTypes[];
 }

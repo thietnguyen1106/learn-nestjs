@@ -8,8 +8,11 @@ import {
   Delete,
   UseGuards,
   ValidationPipe,
+  ParseUUIDPipe,
 } from '@nestjs/common';
+import { UUIDTypes } from 'uuid';
 import { PERMISSION_AUTH } from 'src/config/permission';
+import { StringToArrayPipe } from 'src/utils/stringToArray.pipe';
 import { PermissionsService } from './permissions.service';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
@@ -41,14 +44,18 @@ export class PermissionsController {
 
   @Get(':ids')
   @Permissions(PERMISSION_AUTH.PERMISSION.VIEW.MULTIPLE)
-  findMultiple(@Param('ids') ids: string[], @GetUser() user: User) {
+  findMultiple(
+    @Param('ids', new StringToArrayPipe(',', { isUUID: true }))
+    ids: UUIDTypes[],
+    @GetUser() user: User,
+  ) {
     return this.permissionsService.findMultiple(ids, user);
   }
 
   @Patch(':id')
   @Permissions(PERMISSION_AUTH.PERMISSION.UPDATE)
   update(
-    @Param('id') id: string,
+    @Param('id', new ParseUUIDPipe()) id: UUIDTypes,
     @Body(ValidationPipe) updatePermissionDto: UpdatePermissionDto,
     @GetUser() user: User,
   ) {
@@ -57,7 +64,10 @@ export class PermissionsController {
 
   @Delete(':id')
   @Permissions(PERMISSION_AUTH.ALL)
-  remove(@Param('id') id: string, @GetUser() user: User) {
+  remove(
+    @Param('id', new ParseUUIDPipe()) id: UUIDTypes,
+    @GetUser() user: User,
+  ) {
     return this.permissionsService.remove(id, user);
   }
 }

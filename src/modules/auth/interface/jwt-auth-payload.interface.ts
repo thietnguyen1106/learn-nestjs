@@ -1,4 +1,6 @@
+import { UUIDTypes } from 'uuid';
+
 export interface JwtAuthPayLoad {
-  id: string;
+  id: UUIDTypes;
   fullName: string;
 }

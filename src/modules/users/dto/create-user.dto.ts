@@ -6,6 +6,7 @@ import {
   MaxLength,
   MinLength,
 } from 'class-validator';
+import { UUIDTypes } from 'uuid';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { Gender } from 'src/common/enum/gender.enum';
 
@@ -39,7 +40,7 @@ export class CreateUserDto {
 
   status: EntityStatus;
 
-  roleIds?: string[];
+  roleIds?: UUIDTypes[];
 
-  permissionIds?: string[];
+  permissionIds?: UUIDTypes[];
 }

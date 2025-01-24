@@ -2,6 +2,7 @@ import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { omit } from 'lodash';
+import { UUIDTypes } from 'uuid';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { getStatusCondition } from 'src/utils/getStatusCondition';
 import { CreateRoleDto } from './dto/create-role.dto';
@@ -67,7 +68,7 @@ export class RolesService {
     });
   }
 
-  async findMultiple(ids: string[], user: User) {
+  async findMultiple(ids: UUIDTypes[], user: User) {
     const roles = await this.roleRepository.find({
       relations: ['users', 'permissions'],
       where: {
@@ -85,7 +86,7 @@ export class RolesService {
     });
   }
 
-  async update(id: string, updateRoleDto: UpdateRoleDto, user: User) {
+  async update(id: UUIDTypes, updateRoleDto: UpdateRoleDto, user: User) {
     const {
       name,
       description,
@@ -129,7 +130,7 @@ export class RolesService {
     return this.findMultiple([roleUpdated.id], user);
   }
 
-  async remove(id: string, user: User) {
+  async remove(id: UUIDTypes, user: User) {
     return this.update(id, { status: EntityStatus.DELETE }, user);
   }
 }

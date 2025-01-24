@@ -6,6 +6,7 @@ import {
 import { InjectRepository } from '@nestjs/typeorm';
 import { In, Repository } from 'typeorm';
 import { omit } from 'lodash';
+import { UUIDTypes } from 'uuid';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { getStatusCondition } from 'src/utils/getStatusCondition';
 import { CreatePermissionDto } from './dto/create-permission.dto';
@@ -73,7 +74,7 @@ export class PermissionsService {
     });
   }
 
-  async findMultiple(ids: string[], user: User) {
+  async findMultiple(ids: UUIDTypes[], user: User) {
     const permissions = await this.permissionRepository.find({
       relations: ['roles', 'users'],
       where: { id: In(ids), ...getStatusCondition(user) },
@@ -89,7 +90,7 @@ export class PermissionsService {
   }
 
   async update(
-    id: string,
+    id: UUIDTypes,
     updatePermissionDto: UpdatePermissionDto,
     user: User,
   ) {
@@ -149,7 +150,7 @@ export class PermissionsService {
     return this.findMultiple([permissionUpdated.id], user);
   }
 
-  async remove(id: string, user: User) {
+  async remove(id: UUIDTypes, user: User) {
     return this.update(id, { status: EntityStatus.DELETE }, user);
   }
 }

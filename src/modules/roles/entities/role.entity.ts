@@ -6,7 +6,7 @@ import {
   ManyToMany,
   JoinTable,
 } from 'typeorm';
-import { v4 as uuidv4 } from 'uuid';
+import { UUIDTypes, v4 as uuidv4 } from 'uuid';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { User } from 'src/modules/users/entities/user.entity';
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
@@ -16,17 +16,17 @@ export class Role {
   @Column({ default: () => 'CURRENT_TIMESTAMP', type: 'timestamp' })
   createdAt: Date;
 
-  @Column()
-  creationUserId: string;
+  @Column({ type: 'uuid' })
+  creationUserId: UUIDTypes;
 
   @Column({ nullable: true })
   description: string;
 
   @PrimaryGeneratedColumn('uuid')
-  id: string;
+  id: UUIDTypes;
 
-  @Column()
-  lastModifiedUserId: string;
+  @Column({ type: 'uuid' })
+  lastModifiedUserId: UUIDTypes;
 
   @Column()
   name: string;
