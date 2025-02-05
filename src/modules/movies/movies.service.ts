@@ -137,11 +137,12 @@ export class MoviesService {
 
       // Thiết lập các headers để trả về video
       res.set({
-        'Content-Type': 'video/mp4',
         // 'Content-Disposition': 'inline; filename="sample.mp4"',
-        'Content-Length': video.length, // Cung cấp chiều dài của video
+        'Content-Length': video.length,
+
+        'Content-Type': 'video/mp4', // Cung cấp chiều dài của video
       });
-  
+
       // Trả về nội dung của video
       res.send(video);
 
@@ -163,7 +164,7 @@ export class MoviesService {
       }
 
       const chunksize = end - start + 1;
-      const file = fs.createReadStream(videoPath, { start, end });
+      const file = fs.createReadStream(videoPath, { end, start });
       const head = {
         'Accept-Ranges': 'bytes',
         'Content-Length': chunksize,

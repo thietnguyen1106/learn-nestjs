@@ -51,8 +51,9 @@ export class MoviesController {
   @Get('files')
   @SkipAuth()
   getFile(): StreamableFile {
-    // const file = createReadStream(join(process.cwd(), 'package.json'));
-    const file = createReadStream(join(process.cwd(), 'src/assets/videos/3564298-uhd_3840_2160_24fps.mp4'));
+    const file = createReadStream(
+      join(process.cwd(), 'src/assets/videos/3564298-uhd_3840_2160_24fps.mp4'),
+    );
     return new StreamableFile(file, { length: 1000 });
   }
 
