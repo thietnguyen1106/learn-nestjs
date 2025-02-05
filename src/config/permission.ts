@@ -3,10 +3,20 @@ const COMPARE_TYPES = {
   OR: 'or',
 };
 
-const META_DATA_KEY = 'permissions';
+const SKIP_AUTH_META_DATA_KEY = 'skip_auth';
+const PERMISSION_META_DATA_KEY = 'permissions';
 
 const PERMISSION_AUTH = {
   ALL: 'ALL',
+  MOVIE: {
+    CREATE: 'MOVIE.CREATE',
+    DELETE: 'MOVIE.DELETE',
+    UPDATE: 'MOVIE.UPDATE',
+    VIEW: {
+      ALL: 'MOVIE.VIEW.ALL',
+      MULTIPLE: 'MOVIE.VIEW.MULTIPLE',
+    },
+  },
   PERMISSION: {
     CREATE: 'PERMISSION.CREATE',
     DELETE: 'PERMISSION.DELETE',
@@ -36,4 +46,9 @@ const PERMISSION_AUTH = {
   },
 };
 
-export { COMPARE_TYPES, META_DATA_KEY, PERMISSION_AUTH };
+export {
+  COMPARE_TYPES,
+  SKIP_AUTH_META_DATA_KEY,
+  PERMISSION_META_DATA_KEY,
+  PERMISSION_AUTH,
+};

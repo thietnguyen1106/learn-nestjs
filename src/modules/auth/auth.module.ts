@@ -7,6 +7,7 @@ import { User } from '../users/entities/user.entity';
 import { UsersModule } from '../users/users.module';
 import { RolesModule } from '../roles/roles.module';
 import { PermissionsModule } from '../permissions/permissions.module';
+import { MoviesModule } from '../movies/movies.module';
 import { JwtAuthStrategy } from './strategy/jwt-auth.strategy';
 import { JwtForgotPasswordStrategy } from './strategy/jwt-forgot-password.strategy';
 import { AuthController } from './auth.controller';
@@ -34,6 +35,7 @@ import { AuthService } from './auth.service';
     UsersModule,
     RolesModule,
     PermissionsModule,
+    MoviesModule,
   ],
   providers: [AuthService, JwtAuthStrategy, JwtForgotPasswordStrategy],
 })

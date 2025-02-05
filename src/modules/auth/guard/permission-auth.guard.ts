@@ -12,8 +12,9 @@ import { UsersService } from 'src/modules/users/users.service';
 import { RolesService } from 'src/modules/roles/roles.service';
 import {
   COMPARE_TYPES,
-  META_DATA_KEY,
+  PERMISSION_META_DATA_KEY,
   PERMISSION_AUTH,
+  SKIP_AUTH_META_DATA_KEY,
 } from 'src/config/permission';
 
 @Injectable()
@@ -28,11 +29,16 @@ export class PermissionAuthGuard implements CanActivate {
     context: ExecutionContext,
   ): boolean | Promise<boolean> | Observable<boolean> {
     const permissions = this.reflector.getAllAndOverride<string[]>(
-      META_DATA_KEY,
+      PERMISSION_META_DATA_KEY,
       [context.getHandler(), context.getClass()],
     );
 
-    if (!permissions) {
+    const skipAuth = this.reflector.getAllAndOverride<boolean>(
+      SKIP_AUTH_META_DATA_KEY,
+      [context.getHandler(), context.getClass()],
+    );
+
+    if (skipAuth || !permissions) {
       return true;
     }
 

@@ -9,7 +9,8 @@ import { RolesModule } from 'src/modules/roles/roles.module';
 import { PermissionsModule } from 'src/modules/permissions/permissions.module';
 import { AppController } from 'src/app.controller';
 import { AppService } from 'src/app.service';
-import { AuthModule } from './modules/auth/auth.module';
+import { AuthModule } from 'src/modules/auth/auth.module';
+import { MoviesModule } from 'src/modules/movies/movies.module';
 
 @Module({
   controllers: [AppController],
@@ -31,10 +32,11 @@ import { AuthModule } from './modules/auth/auth.module';
       load: [configuration],
     }),
     TypeOrmModule.forRoot(databaseConfig),
+    AuthModule,
+    MoviesModule,
     PermissionsModule,
     RolesModule,
     UsersModule,
-    AuthModule,
   ],
   providers: [AppService],
 })
