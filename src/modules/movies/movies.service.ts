@@ -1,11 +1,12 @@
 import * as fs from 'fs';
 import { Request, Response } from 'express';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { UUIDTypes } from 'uuid';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { getStatusCondition } from 'src/utils/getStatusCondition';
+import { EntityUtils } from 'src/common/utils/entity.utils';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { User } from '../users/entities/user.entity';
@@ -13,10 +14,15 @@ import { Movie } from './entities/movie.entity';
 
 @Injectable()
 export class MoviesService {
+  private readonly entityUtils: EntityUtils;
+
   constructor(
     @InjectRepository(Movie)
     private readonly movieRepository: Repository<Movie>,
-  ) {}
+    private readonly dataSource: DataSource,
+  ) {
+    this.entityUtils = new EntityUtils(this.dataSource);
+  }
 
   async create(createMovieDto: CreateMovieDto, user: User) {
     const {
@@ -29,7 +35,6 @@ export class MoviesService {
       status,
       subTitle,
       title,
-      type,
       url,
     } = createMovieDto;
 
@@ -45,7 +50,6 @@ export class MoviesService {
       status,
       subTitle,
       title,
-      type,
       url,
     });
 
@@ -54,8 +58,14 @@ export class MoviesService {
     return this.findMultiple([movie.id], user);
   }
 
-  async findAll(user: User) {
+  async findAll(user: User, isSkipRelations: boolean = false) {
+    const relations = this.entityUtils.getRelations({
+      entity: Movie,
+      isSkipRelations,
+    });
+
     const movies = await this.movieRepository.find({
+      relations,
       where: {
         ...getStatusCondition(user),
       },
@@ -64,8 +74,18 @@ export class MoviesService {
     return movies;
   }
 
-  async findMultiple(ids: UUIDTypes[], user: User) {
+  async findMultiple(
+    ids: UUIDTypes[],
+    user: User,
+    isSkipRelations: boolean = false,
+  ) {
+    const relations = this.entityUtils.getRelations({
+      entity: Movie,
+      isSkipRelations,
+    });
+
     const movies = await this.movieRepository.find({
+      relations,
       where: {
         id: In(ids),
         ...getStatusCondition(user),
@@ -86,7 +106,6 @@ export class MoviesService {
       status,
       subTitle,
       title,
-      type,
       url,
     } = updateMovieDto;
 
@@ -107,7 +126,6 @@ export class MoviesService {
       status,
       subTitle,
       title,
-      type,
       url,
     };
 
@@ -126,6 +144,10 @@ export class MoviesService {
     //   ? path.join(__dirname, '..', '..', 'assets', 'videos')
     //   : path.join(__dirname, '..', '..', '..', 'src', 'assets', 'videos');
     const movie = (await this.findMultiple([id], null))[0];
+
+    if (!movie) {
+      throw new NotFoundException('Movie is not found');
+    }
 
     const videoPath = movie.url;
     const videoStat = fs.statSync(videoPath);

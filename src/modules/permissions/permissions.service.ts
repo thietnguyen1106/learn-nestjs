@@ -4,11 +4,13 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { omit } from 'lodash';
 import { UUIDTypes } from 'uuid';
+import { CONSTANTS } from 'src/config/constants';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { getStatusCondition } from 'src/utils/getStatusCondition';
+import { EntityUtils } from 'src/common/utils/entity.utils';
 import { CreatePermissionDto } from './dto/create-permission.dto';
 import { UpdatePermissionDto } from './dto/update-permission.dto';
 import { Permission } from './entities/permission.entity';
@@ -17,6 +19,8 @@ import { User } from '../users/entities/user.entity';
 
 @Injectable()
 export class PermissionsService {
+  private readonly entityUtils: EntityUtils;
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -24,7 +28,10 @@ export class PermissionsService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(Permission)
     private readonly permissionRepository: Repository<Permission>,
-  ) {}
+    private readonly dataSource: DataSource,
+  ) {
+    this.entityUtils = new EntityUtils(this.dataSource);
+  }
 
   async create(createPermissionDto: CreatePermissionDto, user: User) {
     const {
@@ -57,9 +64,14 @@ export class PermissionsService {
     return this.findMultiple([permission.id], user);
   }
 
-  async findAll(user: User) {
+  async findAll(user: User, isSkipRelations: boolean = false) {
+    const relations = this.entityUtils.getRelations({
+      entity: Permission,
+      isSkipRelations,
+    });
+
     const permissions = await this.permissionRepository.find({
-      relations: ['roles', 'users'],
+      relations,
       where: {
         ...getStatusCondition(user),
       },
@@ -69,14 +81,25 @@ export class PermissionsService {
       const { users, ...rest } = permission;
       return {
         ...rest,
-        users: users.map((user) => omit(user, ['password', 'salt'])),
+        ...(relations.includes('users') && {
+          users: users.map((user) => omit(user, CONSTANTS.SENSITIVE_FIELDS)),
+        }),
       };
     });
   }
 
-  async findMultiple(ids: UUIDTypes[], user: User) {
+  async findMultiple(
+    ids: UUIDTypes[],
+    user: User,
+    isSkipRelations: boolean = false,
+  ) {
+    const relations = this.entityUtils.getRelations({
+      entity: Permission,
+      isSkipRelations,
+    });
+
     const permissions = await this.permissionRepository.find({
-      relations: ['roles', 'users'],
+      relations,
       where: { id: In(ids), ...getStatusCondition(user) },
     });
 
@@ -84,7 +107,9 @@ export class PermissionsService {
       const { users, ...rest } = permission;
       return {
         ...rest,
-        users: users.map((user) => omit(user, ['password', 'salt'])),
+        ...(relations.includes('users') && {
+          users: users.map((user) => omit(user, CONSTANTS.SENSITIVE_FIELDS)),
+        }),
       };
     });
   }

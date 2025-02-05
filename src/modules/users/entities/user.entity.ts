@@ -5,6 +5,7 @@ import {
   BeforeInsert,
   ManyToMany,
   JoinTable,
+  OneToMany,
 } from 'typeorm';
 import * as bcrypt from 'bcrypt';
 import { UUIDTypes, v4 as uuidv4 } from 'uuid';
@@ -12,6 +13,7 @@ import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { Gender } from 'src/common/enum/gender.enum';
 import { Role } from 'src/modules/roles/entities/role.entity';
 import { Permission } from 'src/modules/permissions/entities/permission.entity';
+import { Comment } from 'src/modules/comments/entities/comment.entity';
 
 @Entity()
 export class User {
@@ -101,4 +103,7 @@ export class User {
     name: 'user_permissions',
   })
   permissions: Permission[];
+
+  @OneToMany(() => Comment, (comment) => comment.user)
+  comments: Comment[];
 }

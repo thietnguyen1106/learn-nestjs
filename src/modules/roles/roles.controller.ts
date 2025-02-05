@@ -9,6 +9,7 @@ import {
   UseGuards,
   ValidationPipe,
   ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import { UUIDTypes } from 'uuid';
 import { PERMISSION_AUTH } from 'src/config/permission';
@@ -38,8 +39,11 @@ export class RolesController {
 
   @Get()
   @Permissions(PERMISSION_AUTH.ROLE.VIEW.ALL)
-  findAll(@GetUser() user: User) {
-    return this.rolesService.findAll(user);
+  findAll(
+    @GetUser() user: User,
+    @Query('isSkipRelations') isSkipRelations: string,
+  ) {
+    return this.rolesService.findAll(user, isSkipRelations === 'true');
   }
 
   @Get(':ids')
@@ -48,8 +52,13 @@ export class RolesController {
     @Param('ids', new StringToArrayPipe(',', { isUUID: true }))
     ids: UUIDTypes[],
     @GetUser() user: User,
+    @Query('isSkipRelations') isSkipRelations: string,
   ) {
-    return this.rolesService.findMultiple(ids, user);
+    return this.rolesService.findMultiple(
+      ids,
+      user,
+      isSkipRelations === 'true',
+    );
   }
 
   @Patch(':id')

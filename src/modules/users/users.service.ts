@@ -4,12 +4,12 @@ import {
   NotFoundException,
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Not, Repository } from 'typeorm';
+import { DataSource, In, Not, Repository } from 'typeorm';
 import * as bcrypt from 'bcrypt';
-import { omit } from 'lodash';
 import { UUIDTypes } from 'uuid';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { getStatusCondition } from 'src/utils/getStatusCondition';
+import { EntityUtils } from 'src/common/utils/entity.utils';
 import { CreateUserDto } from './dto/create-user.dto';
 import { UpdateUserDto } from './dto/update-user.dto';
 import { User } from './entities/user.entity';
@@ -18,6 +18,8 @@ import { Permission } from '../permissions/entities/permission.entity';
 
 @Injectable()
 export class UsersService {
+  private readonly entityUtils: EntityUtils;
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -25,7 +27,10 @@ export class UsersService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(Permission)
     private readonly permissionRepository: Repository<Permission>,
-  ) {}
+    private readonly dataSource: DataSource,
+  ) {
+    this.entityUtils = new EntityUtils(this.dataSource);
+  }
 
   async create(createUserDto: CreateUserDto, user: User) {
     const {
@@ -79,30 +84,69 @@ export class UsersService {
 
     await this.userRepository.save(newUser);
 
-    return this.findMultiple([newUser.id], user);
+    return this.findMultiple({ ids: [newUser.id], user });
   }
 
-  async findAll(user: User) {
+  async findAll(params: {
+    user: User;
+    isSkipRelations?: boolean;
+    isSkipSensitives?: boolean;
+  }) {
+    const { user, isSkipRelations = false, isSkipSensitives = true } = params;
+
+    const relations = this.entityUtils.getRelations({
+      entity: User,
+      isSkipRelations,
+    });
+
+    const select = this.entityUtils.getSelect({
+      entity: User,
+      isSkipSensitives,
+    });
+
     const users = await this.userRepository.find({
-      relations: ['roles', 'permissions'],
+      relations,
+      select,
       where: {
         ...getStatusCondition(user),
       },
     });
 
-    return users.map((user) => omit(user, ['password', 'salt']));
+    return users;
   }
 
-  async findMultiple(ids: UUIDTypes[], user: User) {
+  async findMultiple(params: {
+    ids: UUIDTypes[];
+    user: User;
+    isSkipRelations?: boolean;
+    isSkipSensitives?: boolean;
+  }) {
+    const {
+      ids,
+      user,
+      isSkipRelations = false,
+      isSkipSensitives = true,
+    } = params;
+    const relations = this.entityUtils.getRelations({
+      entity: User,
+      isSkipRelations,
+    });
+
+    const select = this.entityUtils.getSelect({
+      entity: User,
+      isSkipSensitives,
+    });
+
     const users = await this.userRepository.find({
-      relations: ['roles', 'permissions'],
+      relations,
+      select,
       where: {
         id: In(ids),
         ...getStatusCondition(user),
       },
     });
 
-    return users.map((user) => omit(user, ['password', 'salt']));
+    return users;
   }
 
   async update(id: UUIDTypes, updateUserDto: UpdateUserDto, user: User) {
@@ -121,7 +165,13 @@ export class UsersService {
       permissionDeleteIds = [],
     } = updateUserDto;
 
-    const currentUser = (await this.findMultiple([id], user))[0];
+    const currentUser = (
+      await this.findMultiple({
+        ids: [id],
+        user,
+      })
+    )[0];
+
     if (!currentUser) {
       throw new NotFoundException(`User with id '${id}' not found`);
     }
@@ -168,7 +218,7 @@ export class UsersService {
 
     await this.userRepository.save(updatedUser);
 
-    return this.findMultiple([updatedUser.id], user);
+    return this.findMultiple({ ids: [updatedUser.id], user });
   }
 
   async remove(id: UUIDTypes, user: User) {

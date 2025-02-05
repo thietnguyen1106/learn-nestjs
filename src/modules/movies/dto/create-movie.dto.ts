@@ -1,5 +1,4 @@
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
-import { MovieType } from 'src/common/enum/movie-type.enum';
 
 export class CreateMovieDto {
   description?: string;
@@ -11,6 +10,5 @@ export class CreateMovieDto {
   status?: EntityStatus;
   subTitle?: string;
   title: string;
-  type?: MovieType;
   url: string;
 }

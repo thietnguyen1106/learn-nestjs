@@ -8,6 +8,14 @@ const CONSTANTS = {
     DATABASE_TYPE: 'mysql',
     DATABASE_USER: 'root',
   },
+  SENSITIVE_FIELDS: [
+    'password',
+    'salt',
+    'resetPasswordToken',
+    'xToken',
+    'xRefetchToken',
+    'xRefetchTokenExpirationTime',
+  ],
 };
 
 export { CONSTANTS };

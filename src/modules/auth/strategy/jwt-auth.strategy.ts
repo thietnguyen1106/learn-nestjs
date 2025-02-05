@@ -2,6 +2,7 @@ import { PassportStrategy } from '@nestjs/passport';
 import { Strategy, ExtractJwt } from 'passport-jwt';
 import { Omit, omit } from 'lodash';
 import { Injectable, UnauthorizedException } from '@nestjs/common';
+import { CONSTANTS } from 'src/config/constants';
 import { User } from 'src/modules/users/entities/user.entity';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { JwtAuthPayLoad } from '../interface/jwt-auth-payload.interface';
@@ -27,9 +28,7 @@ export class JwtAuthStrategy extends PassportStrategy(
     });
   }
 
-  async validate(
-    payload: JwtAuthPayLoad,
-  ): Promise<Omit<User, 'password' | 'salt'>> {
+  async validate(payload: JwtAuthPayLoad): Promise<Omit<User, string>> {
     const { id } = payload;
 
     const user = await UserRepository.findOne({
@@ -41,6 +40,6 @@ export class JwtAuthStrategy extends PassportStrategy(
       throw new UnauthorizedException();
     }
 
-    return omit(user, ['password', 'salt']);
+    return omit(user, CONSTANTS.SENSITIVE_FIELDS);
   }
 }

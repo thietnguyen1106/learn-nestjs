@@ -11,6 +11,7 @@ import {
   UseGuards,
   ValidationPipe,
   ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import { UUIDTypes } from 'uuid';
 import { PERMISSION_AUTH } from 'src/config/permission';
@@ -41,8 +42,11 @@ export class MoviesController {
 
   @Get()
   @Permissions(PERMISSION_AUTH.MOVIE.VIEW.ALL)
-  findAll(@GetUser() user: User) {
-    return this.moviesService.findAll(user);
+  findAll(
+    @GetUser() user: User,
+    @Query('isSkipRelations') isSkipRelations: string,
+  ) {
+    return this.moviesService.findAll(user, isSkipRelations === 'true');
   }
 
   @Get(':ids')
@@ -51,8 +55,13 @@ export class MoviesController {
     @Param('ids', new StringToArrayPipe(',', { isUUID: true }))
     ids: UUIDTypes[],
     @GetUser() user: User,
+    @Query('isSkipRelations') isSkipRelations: string,
   ) {
-    return this.moviesService.findMultiple(ids, user);
+    return this.moviesService.findMultiple(
+      ids,
+      user,
+      isSkipRelations === 'true',
+    );
   }
 
   @Patch(':id')

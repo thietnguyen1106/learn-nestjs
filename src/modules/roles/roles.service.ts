@@ -1,10 +1,12 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
-import { In, Repository } from 'typeorm';
+import { DataSource, In, Repository } from 'typeorm';
 import { omit } from 'lodash';
 import { UUIDTypes } from 'uuid';
+import { CONSTANTS } from 'src/config/constants';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { getStatusCondition } from 'src/utils/getStatusCondition';
+import { EntityUtils } from 'src/common/utils/entity.utils';
 import { CreateRoleDto } from './dto/create-role.dto';
 import { UpdateRoleDto } from './dto/update-role.dto';
 import { Role } from './entities/role.entity';
@@ -13,6 +15,8 @@ import { Permission } from '../permissions/entities/permission.entity';
 
 @Injectable()
 export class RolesService {
+  private readonly entityUtils: EntityUtils;
+
   constructor(
     @InjectRepository(User)
     private readonly userRepository: Repository<User>,
@@ -20,7 +24,10 @@ export class RolesService {
     private readonly roleRepository: Repository<Role>,
     @InjectRepository(Permission)
     private readonly permissionRepository: Repository<Permission>,
-  ) {}
+    private readonly dataSource: DataSource,
+  ) {
+    this.entityUtils = new EntityUtils(this.dataSource);
+  }
 
   async create(createRoleDto: CreateRoleDto, user: User) {
     const {
@@ -51,9 +58,13 @@ export class RolesService {
     return this.findMultiple([role.id], user);
   }
 
-  async findAll(user: User) {
+  async findAll(user: User, isSkipRelations: boolean = false) {
+    const relations = this.entityUtils.getRelations({
+      entity: Role,
+      isSkipRelations,
+    });
     const roles = await this.roleRepository.find({
-      relations: ['users', 'permissions'],
+      relations,
       where: {
         ...getStatusCondition(user),
       },
@@ -63,14 +74,24 @@ export class RolesService {
       const { users, ...rest } = role;
       return {
         ...rest,
-        users: users.map((user) => omit(user, ['password', 'salt'])),
+        ...(relations.includes('users') && {
+          users: users.map((user) => omit(user, CONSTANTS.SENSITIVE_FIELDS)),
+        }),
       };
     });
   }
 
-  async findMultiple(ids: UUIDTypes[], user: User) {
+  async findMultiple(
+    ids: UUIDTypes[],
+    user: User,
+    isSkipRelations: boolean = false,
+  ) {
+    const relations = this.entityUtils.getRelations({
+      entity: Role,
+      isSkipRelations,
+    });
     const roles = await this.roleRepository.find({
-      relations: ['users', 'permissions'],
+      relations,
       where: {
         id: In(ids),
         ...getStatusCondition(user),
@@ -81,7 +102,9 @@ export class RolesService {
       const { users, ...rest } = role;
       return {
         ...rest,
-        users: users.map((user) => omit(user, ['password', 'salt'])),
+        ...(relations.includes('users') && {
+          users: users.map((user) => omit(user, CONSTANTS.SENSITIVE_FIELDS)),
+        }),
       };
     });
   }

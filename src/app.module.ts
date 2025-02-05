@@ -11,6 +11,11 @@ import { AppController } from 'src/app.controller';
 import { AppService } from 'src/app.service';
 import { AuthModule } from 'src/modules/auth/auth.module';
 import { MoviesModule } from 'src/modules/movies/movies.module';
+import { CategoriesModule } from './modules/categories/categories.module';
+import { TopicsModule } from './modules/topics/topics.module';
+import { PerformersModule } from './modules/performers/performers.module';
+import { TypesModule } from './modules/types/types.module';
+import { CommentsModule } from './modules/comments/comments.module';
 
 @Module({
   controllers: [AppController],
@@ -33,9 +38,14 @@ import { MoviesModule } from 'src/modules/movies/movies.module';
     }),
     TypeOrmModule.forRoot(databaseConfig),
     AuthModule,
+    CategoriesModule,
+    CommentsModule,
     MoviesModule,
+    PerformersModule,
     PermissionsModule,
     RolesModule,
+    TopicsModule,
+    TypesModule,
     UsersModule,
   ],
   providers: [AppService],

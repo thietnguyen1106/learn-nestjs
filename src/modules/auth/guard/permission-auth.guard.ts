@@ -54,7 +54,10 @@ export class PermissionAuthGuard implements CanActivate {
     const requestUser = request.user;
 
     const user = (
-      await this.usersService.findMultiple([requestUser.id], requestUser)
+      await this.usersService.findMultiple({
+        ids: [requestUser.id],
+        user: requestUser,
+      })
     )[0];
 
     if (!user) {

@@ -9,6 +9,7 @@ import {
   UseGuards,
   ValidationPipe,
   ParseUUIDPipe,
+  Query,
 } from '@nestjs/common';
 import { UUIDTypes } from 'uuid';
 import { PERMISSION_AUTH } from 'src/config/permission';
@@ -38,8 +39,16 @@ export class UsersController {
 
   @Get()
   @Permissions(PERMISSION_AUTH.USER.VIEW.ALL)
-  findAll(@GetUser() user: User) {
-    return this.usersService.findAll(user);
+  findAll(
+    @GetUser() user: User,
+    @Query('isSkipRelations') isSkipRelations: string,
+    @Query('isSkipSensitives') isSkipSensitives: string,
+  ) {
+    return this.usersService.findAll({
+      isSkipRelations: isSkipRelations === 'true',
+      isSkipSensitives: !(isSkipSensitives === 'false'),
+      user,
+    });
   }
 
   @Get(':ids')
@@ -48,8 +57,15 @@ export class UsersController {
     @Param('ids', new StringToArrayPipe(',', { isUUID: true }))
     ids: UUIDTypes[],
     @GetUser() user: User,
+    @Query('isSkipRelations') isSkipRelations: string,
+    @Query('isSkipSensitives') isSkipSensitives: string,
   ) {
-    return this.usersService.findMultiple(ids, user);
+    return this.usersService.findMultiple({
+      ids,
+      isSkipRelations: isSkipRelations === 'true',
+      isSkipSensitives: !(isSkipSensitives === 'false'),
+      user,
+    });
   }
 
   @Patch(':id')
