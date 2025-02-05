@@ -1,15 +1,15 @@
 import * as fs from 'fs';
 import { Request, Response } from 'express';
 import { In, Repository } from 'typeorm';
+import { UUIDTypes } from 'uuid';
 import { InjectRepository } from '@nestjs/typeorm';
 import { Injectable, NotFoundException } from '@nestjs/common';
+import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { getStatusCondition } from 'src/utils/getStatusCondition';
 import { CreateMovieDto } from './dto/create-movie.dto';
 import { UpdateMovieDto } from './dto/update-movie.dto';
 import { User } from '../users/entities/user.entity';
 import { Movie } from './entities/movie.entity';
-import { UUIDTypes } from 'uuid';
-import { EntityStatus } from 'src/common/enum/entity-status.enum';
 
 @Injectable()
 export class MoviesService {
@@ -131,23 +131,6 @@ export class MoviesService {
     const videoStat = fs.statSync(videoPath);
     const fileSize = videoStat.size;
     const range = req.headers.range;
-
-    if (false) {
-      const video = fs.readFileSync(videoPath); // Đọc toàn bộ nội dung file
-
-      // Thiết lập các headers để trả về video
-      res.set({
-        // 'Content-Disposition': 'inline; filename="sample.mp4"',
-        'Content-Length': video.length,
-
-        'Content-Type': 'video/mp4', // Cung cấp chiều dài của video
-      });
-
-      // Trả về nội dung của video
-      res.send(video);
-
-      return;
-    }
 
     if (range) {
       const parts = range.replace(/bytes=/, '').split('-');

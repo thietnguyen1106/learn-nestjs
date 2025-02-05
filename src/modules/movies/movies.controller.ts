@@ -11,7 +11,6 @@ import {
   UseGuards,
   ValidationPipe,
   ParseUUIDPipe,
-  StreamableFile,
 } from '@nestjs/common';
 import { UUIDTypes } from 'uuid';
 import { PERMISSION_AUTH } from 'src/config/permission';
@@ -25,8 +24,6 @@ import { GetUser } from '../users/decorator/get-user.decorator';
 import { User } from '../users/entities/user.entity';
 import { Permissions } from '../auth/decorator/permission.decorator';
 import { SkipAuth } from '../auth/decorator/skip-auth.decorator';
-import { createReadStream } from 'fs';
-import { join } from 'path';
 
 @UseGuards(JwtAuthGuard, PermissionAuthGuard)
 @Controller('movies')
@@ -46,15 +43,6 @@ export class MoviesController {
   @Permissions(PERMISSION_AUTH.MOVIE.VIEW.ALL)
   findAll(@GetUser() user: User) {
     return this.moviesService.findAll(user);
-  }
-
-  @Get('files')
-  @SkipAuth()
-  getFile(): StreamableFile {
-    const file = createReadStream(
-      join(process.cwd(), 'src/assets/videos/3564298-uhd_3840_2160_24fps.mp4'),
-    );
-    return new StreamableFile(file, { length: 1000 });
   }
 
   @Get(':ids')
