@@ -1,3 +1,4 @@
+import { UUIDTypes } from 'uuid';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 
 export class CreateMovieDto {
@@ -11,4 +12,8 @@ export class CreateMovieDto {
   subTitle?: string;
   title: string;
   url: string;
+  categoryIds?: UUIDTypes[];
+  topicIds?: UUIDTypes[];
+  typeIds?: UUIDTypes[];
+  performerIds?: UUIDTypes[];
 }

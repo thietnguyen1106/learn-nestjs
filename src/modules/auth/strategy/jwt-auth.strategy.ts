@@ -23,6 +23,7 @@ export class JwtAuthStrategy extends PassportStrategy(
       //     return request?.cookies?.Authentication;
       //   },
       // ]),
+      ignoreExpiration: false,
       jwtFromRequest: ExtractJwt.fromAuthHeaderAsBearerToken(),
       secretOrKey: process.env.JWT_SECRET,
     });

@@ -1,3 +1,4 @@
+import { UUIDTypes } from 'uuid';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 
 export class CreatePerformerDto {
@@ -9,4 +10,5 @@ export class CreatePerformerDto {
   biography?: string;
   link?: string;
   status?: EntityStatus;
+  movieIds?: UUIDTypes[];
 }
