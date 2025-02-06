@@ -5,9 +5,7 @@ import {
 } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
-import { omit } from 'lodash';
 import { UUIDTypes } from 'uuid';
-import { CONSTANTS } from 'src/config/constants';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { getStatusCondition } from 'src/utils/getStatusCondition';
 import { EntityUtils } from 'src/common/utils/entity.utils';
@@ -105,17 +103,7 @@ export class CategoriesService {
       where: { id: In(ids), ...getStatusCondition(user) },
     });
 
-    return categories.map((category) => {
-      const { movies, ...rest } = category;
-      return {
-        ...rest,
-        ...(relations.includes('movies') && {
-          movies: movies.map((movie) =>
-            omit(movie, CONSTANTS.SENSITIVE_FIELDS),
-          ),
-        }),
-      };
-    });
+    return categories;
   }
 
   async update(
