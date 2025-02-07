@@ -68,9 +68,16 @@ export class MoviesService {
       relations,
       where: {
         ...getStatusCondition(user),
-        ...(relations.includes('comments') && { comments: { lever: 0 } }),
       },
     });
+
+    if (relations.includes('comments')) {
+      movies.forEach((movie) => {
+        movie.comments = movie.comments.filter(
+          (comment) => comment.level === 0,
+        );
+      });
+    }
 
     return movies;
   }
@@ -90,9 +97,16 @@ export class MoviesService {
       where: {
         id: In(ids),
         ...getStatusCondition(user),
-        ...(relations.includes('comments') && { comments: { lever: 0 } }),
       },
     });
+
+    if (relations.includes('comments')) {
+      movies.forEach((movie) => {
+        movie.comments = movie.comments.filter(
+          (comment) => comment.level === 0,
+        );
+      });
+    }
 
     return movies;
   }

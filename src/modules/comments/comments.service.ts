@@ -59,7 +59,7 @@ export class CommentsService {
       );
     }
 
-    if (parentComment?.lever >= 2) {
+    if (parentComment?.level >= 2) {
       throw new ConflictException('Cannot reply to comments with level >= 2');
     }
 
@@ -67,7 +67,7 @@ export class CommentsService {
       content,
       creationUserId: user.id,
       lastModifiedUserId: user.id,
-      lever: parentComment ? parentComment.lever + 1 : 0,
+      level: parentComment ? parentComment.level + 1 : 0,
       movie,
       parent: parentComment,
       status,
@@ -89,7 +89,7 @@ export class CommentsService {
       relations,
       where: {
         ...getStatusCondition(user),
-        lever: 0,
+        level: 0,
       },
     });
 

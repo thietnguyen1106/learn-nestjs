@@ -20,7 +20,7 @@ export class Comment {
   content: string;
 
   @Column()
-  lever: number;
+  level: number;
 
   @Column({ default: () => 'CURRENT_TIMESTAMP', type: 'timestamp' })
   createdAt: Date;
