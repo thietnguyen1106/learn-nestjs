@@ -1,4 +1,8 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
+import {
+  ConflictException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DataSource, In, Repository } from 'typeorm';
 import { UUIDTypes } from 'uuid';
@@ -31,9 +35,14 @@ export class CommentsService {
     const { content, status, movieId, parentId, userId } = createCommentDto;
 
     const [movie, parentComment, userComment] = await Promise.all([
-      this.movieRepository.findOneBy({ id: movieId }),
-      parentId ? this.commentRepository.findOneBy({ id: parentId }) : null,
-      this.userRepository.findOneBy({ id: userId }),
+      this.movieRepository.findOne({ where: { id: movieId } }),
+      parentId
+        ? this.commentRepository.findOne({
+            relations: ['movie'],
+            where: { id: parentId },
+          })
+        : null,
+      this.userRepository.findOne({ where: { id: userId } }),
     ]);
 
     if (!movie) {
@@ -50,10 +59,8 @@ export class CommentsService {
       );
     }
 
-    if (parentComment?.lever > 2) {
-      throw new NotFoundException(
-        'Cannot reply to a comment more than 2 levels',
-      );
+    if (parentComment?.lever >= 2) {
+      throw new ConflictException('Cannot reply to comments with level >= 2');
     }
 
     const comment = this.commentRepository.create({
@@ -82,6 +89,7 @@ export class CommentsService {
       relations,
       where: {
         ...getStatusCondition(user),
+        lever: 0,
       },
     });
 

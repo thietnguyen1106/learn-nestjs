@@ -68,6 +68,7 @@ export class MoviesService {
       relations,
       where: {
         ...getStatusCondition(user),
+        ...(relations.includes('comments') && { comments: { lever: 0 } }),
       },
     });
 
@@ -89,6 +90,7 @@ export class MoviesService {
       where: {
         id: In(ids),
         ...getStatusCondition(user),
+        ...(relations.includes('comments') && { comments: { lever: 0 } }),
       },
     });
 
