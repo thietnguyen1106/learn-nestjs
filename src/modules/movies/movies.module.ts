@@ -13,18 +13,28 @@ import { TypesModule } from '../types/types.module';
 import { PerformersModule } from '../performers/performers.module';
 import { TopicsModule } from '../topics/topics.module';
 import { RolesModule } from '../roles/roles.module';
+import { CommentsModule } from '../comments/comments.module';
+import { Comment } from '../comments/entities/comment.entity';
 
 @Module({
   controllers: [MoviesController],
   exports: [TypeOrmModule, MoviesService],
   imports: [
-    TypeOrmModule.forFeature([Movie, Topic, Category, Type, Performer]),
+    TypeOrmModule.forFeature([
+      Movie,
+      Topic,
+      Category,
+      Type,
+      Performer,
+      Comment,
+    ]),
     forwardRef(() => UsersModule),
     forwardRef(() => RolesModule),
     forwardRef(() => TopicsModule),
     forwardRef(() => CategoriesModule),
     forwardRef(() => TypesModule),
     forwardRef(() => PerformersModule),
+    forwardRef(() => CommentsModule),
   ],
   providers: [MoviesService],
 })

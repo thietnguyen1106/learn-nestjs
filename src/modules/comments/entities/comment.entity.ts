@@ -54,5 +54,5 @@ export class Comment {
   children: Comment[];
 
   @ManyToOne(() => User, (user) => user.comments)
-  user: User[];
+  user: User;
 }
