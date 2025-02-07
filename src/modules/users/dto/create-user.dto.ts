@@ -1,28 +1,32 @@
+import { UUIDTypes } from 'uuid';
 import {
   IsEmail,
-  IsNotEmpty,
+  IsEnum,
+  IsOptional,
   IsString,
+  IsUUID,
   Matches,
   MaxLength,
   MinLength,
 } from 'class-validator';
-import { UUIDTypes } from 'uuid';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { Gender } from 'src/common/enum/gender.enum';
 
 export class CreateUserDto {
+  @IsOptional()
   companyId?: string;
 
+  @IsOptional()
   departmentId?: string;
 
-  @IsString()
   @IsEmail()
-  @IsNotEmpty()
   email: string;
 
   @IsString()
   firstName: string;
 
+  @IsOptional()
+  @IsEnum(Gender)
   gender?: Gender;
 
   @IsString()
@@ -32,15 +36,23 @@ export class CreateUserDto {
   @MinLength(6)
   @MaxLength(100)
   @Matches(/((?=.*\d)|(?=.*\W+))(?![.\n])(?=.*[A-Z])(?=.*[a-z]).*$/, {
-    message: 'password to weak',
+    message: 'Password is not formatted correctly',
   })
   password: string;
 
+  @IsOptional()
+  @IsString()
   phone?: string;
 
-  status: EntityStatus;
+  @IsOptional()
+  @IsEnum(EntityStatus)
+  status?: EntityStatus;
 
+  @IsOptional()
+  @IsUUID('4', { each: true })
   roleIds?: UUIDTypes[];
 
+  @IsOptional()
+  @IsUUID('4', { each: true })
   permissionIds?: UUIDTypes[];
 }

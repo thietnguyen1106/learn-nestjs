@@ -8,6 +8,7 @@ import {
 import { UUIDTypes, v4 as uuidv4 } from 'uuid';
 import { EntityStatus } from 'src/common/enum/entity-status.enum';
 import { Movie } from 'src/modules/movies/entities/movie.entity';
+import { Gender } from 'src/common/enum/gender.enum';
 
 @Entity()
 export class Performer {
@@ -20,8 +21,8 @@ export class Performer {
   @Column({ nullable: true })
   avatarUrl: string;
 
-  @Column({ nullable: true })
-  sex: string;
+  @Column({ default: Gender.UNDEFINED })
+  gender: Gender;
 
   @Column({ nullable: true })
   dateOfBirth: string;

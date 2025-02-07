@@ -1,6 +1,6 @@
 import { Injectable } from '@nestjs/common';
-import { DataSource } from 'typeorm';
 import { CONSTANTS } from 'src/config/constants';
+import { DataSource } from 'typeorm';
 
 @Injectable()
 export class EntityUtils {
@@ -26,6 +26,26 @@ export class EntityUtils {
 
     if (relations.length) {
       return relationNames.filter((relation) => relations.includes(relation));
+    }
+
+    if (relationNames.includes('comments')) {
+      // Only 3 levels of comments can be obtained (0, 1, 2)
+      relationNames.push(
+        ...[
+          'comments.parent',
+          'comments.children',
+          'comments.children.parent',
+          'comments.children.children',
+          'comments.children.children.parent',
+        ],
+      );
+    }
+
+    if (relationNames.includes('children')) {
+      relationNames.push(
+        // Only 3 levels of comments can be obtained (0, 1, 2)
+        ...['children.parent', 'children.children', 'children.children.parent'],
+      );
     }
 
     return relationNames;

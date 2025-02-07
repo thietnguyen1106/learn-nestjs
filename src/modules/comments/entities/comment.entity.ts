@@ -13,11 +13,14 @@ import { User } from 'src/modules/users/entities/user.entity';
 
 @Entity()
 export class Comment {
-  @PrimaryGeneratedColumn()
+  @PrimaryGeneratedColumn('uuid')
   id: UUIDTypes;
 
   @Column()
   content: string;
+
+  @Column()
+  lever: number;
 
   @Column({ default: () => 'CURRENT_TIMESTAMP', type: 'timestamp' })
   createdAt: Date;

@@ -33,7 +33,7 @@ export class PerformersService {
     const {
       name,
       avatarUrl,
-      sex,
+      gender,
       dateOfBirth,
       nation,
       biography,
@@ -62,12 +62,12 @@ export class PerformersService {
       biography,
       creationUserId: user.id,
       dateOfBirth,
+      gender,
       lastModifiedUserId: user.id,
       link,
       movies,
       name,
       nation,
-      sex,
       status,
     });
 
@@ -118,7 +118,7 @@ export class PerformersService {
     const {
       name,
       avatarUrl,
-      sex,
+      gender,
       dateOfBirth,
       nation,
       biography,
@@ -158,12 +158,12 @@ export class PerformersService {
       avatarUrl,
       biography,
       dateOfBirth,
+      gender,
       lastModifiedUserId: user.id,
       link,
       movies: newMovies,
       name,
       nation,
-      sex,
       status,
     };
 

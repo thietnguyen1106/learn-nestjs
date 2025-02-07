@@ -32,14 +32,35 @@ export class CommentsService {
 
     const [movie, parentComment, userComment] = await Promise.all([
       this.movieRepository.findOneBy({ id: movieId }),
-      this.commentRepository.findOneBy({ id: parentId }),
+      parentId ? this.commentRepository.findOneBy({ id: parentId }) : null,
       this.userRepository.findOneBy({ id: userId }),
     ]);
+
+    if (!movie) {
+      throw new NotFoundException(`Movie with id ${movieId} not found`);
+    }
+
+    if (!userComment) {
+      throw new NotFoundException(`User with id ${userId} not found`);
+    }
+
+    if (parentComment && parentComment?.movie?.id !== movie.id) {
+      throw new NotFoundException(
+        `Comment with id ${parentId} not found in movie with id ${movieId}`,
+      );
+    }
+
+    if (parentComment?.lever > 2) {
+      throw new NotFoundException(
+        'Cannot reply to a comment more than 2 levels',
+      );
+    }
 
     const comment = this.commentRepository.create({
       content,
       creationUserId: user.id,
       lastModifiedUserId: user.id,
+      lever: parentComment ? parentComment.lever + 1 : 0,
       movie,
       parent: parentComment,
       status,
